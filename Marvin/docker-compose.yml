@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  jenkins:
+    privileged: true
+    build: .
+    image: emnify/jenkins-casc:latest
+    volumes:
+      - ./my_marvin.yml:/var/jenkins_casc.yml
+      - ./job_dsl.groovy:/var/job_dsl.groovy
+    ports:
+      - "5000:5000"
+    environment:
+      CASC_JENKINS_CONFIG: /var/jenkins_casc.yml
+      USER_CHOCOLATEEN_PASSWORD: "chocolateenpass"
+      USER_VAUGIE_G_PASSWORD: "vaugiegpass"
+      USER_I_DONT_KNOW_PASSWORD: "idontknowpass"
+      USER_NASSO_PASSWORD: "nanopass"
