@@ -1,0 +1,78 @@
+version: '3.7'
+services:
+  poll:
+    build: ./poll
+    image: ahmataffadine/poll_image
+    ports:
+      - 5000:${POLL_PORT}
+    depends_on:
+      - redis
+    networks:
+      - poll-tier
+    environment:
+      - POLL_PORT:${POLL_PORT}
+      - REDIS_HOST:${REDIS_HOST}
+      - REDIS_PORT:${REDIS_PORT}
+
+  result:
+    build: ./result
+    image: ahmataffadine/result_image
+    ports:
+      - 5001:${RESULT_PORT}
+    depends_on:
+      - db
+    networks:
+      - result-tier
+    environment:
+      - PG_HOST:${PG_HOST}
+      - PG_PORT:${PG_PORT}
+      - PG_USER:${PG_USER}
+      - PG_PASSWORD:${PG_PASSWORD}
+      - RESULT_PORT:${RESULT_PORT}
+
+  worker:
+    build: ./worker
+    image: ahmataffadine/worker_image
+    depends_on:
+      - redis
+      - db
+    networks:
+      - back-tier
+    environment:
+      - PG_HOST:${PG_HOST}
+      - PG_PORT:${PG_PORT}
+      - PG_USER:${PG_USER}
+      - PG_PASSWORD:${PG_PASSWORD}
+      - REDIS_HOST:${REDIS_HOST}
+      - REDIS_PORT:${REDIS_PORT}
+ 
+  redis:
+    image: redis:latest
+    expose:
+      - ${REDIS_PORT}
+    networks:
+      - poll-tier
+      - back-tier
+  db:
+    image: postgres:10.23-alpine
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    expose:
+      - ${PG_PORT}
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - result-tier
+      - back-tier
+networks:
+  poll-tier:
+    external: false
+  back-tier:
+    external: false
+  result-tier:
+    external: false
+    
+
